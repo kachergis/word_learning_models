@@ -1,0 +1,11 @@
+George Kachergis, December 12, 2013
+george.kachergis@gmail.com
+
+This repository contains a number of learning models that I've implemented for cross-
+situational word learning research. I am slowly trying to collect implementations 
+from over the years (along with data), so please bear with me as I standardize and 
+document functions. Most of these models and data have appeared in at least one of my 
+publications, which can all be found on my website: http://www.kachergis.com
+
+Please let me know if you have any questions, or if you have found this collection
+useful please cite my dissertation.
