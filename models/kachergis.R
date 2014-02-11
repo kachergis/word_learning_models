@@ -1,5 +1,5 @@
 # Associative Uncertainty- (Entropy) & Familiarity-Biased Model
-# George Kachergis  george.kachergis@gmail.com  June 10, 2011
+# George Kachergis  gkacherg@indiana.edu  June 10, 2011
 
 shannon.entropy <- function(p) {
 	if (min(p) < 0 || sum(p) <= 0)
@@ -8,7 +8,9 @@ shannon.entropy <- function(p) {
 	-sum(log2(p.norm)*p.norm)
 	}
 
-update_known <- function(m, tr_w, tr_o, startval=.01) {
+update_known <- function(m, tr_w, tr_o) {
+  startval = .01
+  
   for(i in tr_w) {
     for(c in 1:dim(m)[2]) {
       if(sum(m[,c]>0) & m[i,c]==0) {
@@ -25,16 +27,10 @@ update_known <- function(m, tr_w, tr_o, startval=.01) {
 }
 
 
-model <- function(params, ord=c(), ord_name="", reps=1, name="model", save_traj=FALSE, print_matrix=FALSE) {
+model <- function(params, ord=c(), reps=1) {
 	X <- params[1] # associative weight to distribute
 	B <- params[2] # weighting of uncertainty vs. familiarity
 	C <- params[3] # decay
-	
-	# learning trajectory data
-	if(save_traj) {
-		traj <- data.frame(Trial=numeric(0), testtype=character(0), x=numeric(0.0))
-		ord <- read.table(paste(ord_dir,ord_name,".txt",sep=""), header=T) # ordering
-		}
 	
 	voc_sz = max(unlist(ord), na.rm=TRUE) # vocabulary size
 	ppt = length(ord$trials[[1]]$words) # pairs per trial
@@ -64,28 +60,16 @@ model <- function(params, ord=c(), ord_name="", reps=1, name="model", save_traj=
 		assocs = m[tr_w,tr_o]
 		denom = sum(assocs * nent)
 		m = m*C # decay everything
-		
-		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (ent_w %*% t(ent_o))) / denom # update assocs
-		
-		if(print_matrix) print(m)
-		
-		if(save_traj & t>1) { # saving model learning trajectories for graphing
-			modelx <- test(m+.01)
-			modela <- test_abs(m+.01)
-			traj <- rbind(traj, data.frame(Trial=t, x=modelx[1]))
-			traja <- rbind(traja, data.frame(Trial=t, x=modela[1]))
-		}
+		# update associations on this trial
+		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (ent_w %*% t(ent_o))) / denom 
+
+		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
+		traj[index] = m
 	  }
 	}
-	if(save_traj) {
-		save(traj, file=paste(name,"_",ord_name,"_traj.RData",sep=''))
-		save(traja, file=paste(name,"_",ord_name,"_abs_traj.RData",sep=''))
-		}
-	m = m+.01
-	want = list()
-	#print(plot(1:dim(ord)[1], mean_ent)) # col=perf[perf<.5]
-	#want[['tr_ent']] = mean_ent
-	#want[['perf']] = perf
-	return(m)
+	m = m+.01 # test noise constant k
+	perf = diag(m) / rowSums(m)
+	want = list(perf=perf, matrix=m, traj=traj)
+	return(want)
 	}
 

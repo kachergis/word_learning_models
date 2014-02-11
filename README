@@ -30,3 +30,15 @@ models/
 	- TODAM2.R - a few different adaptations of the TODAM 2 model from Murdock, B.B. (1997). Context and mediators in a theory of distributed associative memory (TODAM2). Psychological Review, 104, 839-862.
 
 	- rescorla-wagner.R - Rescorla, R.A. & Wagner, A.R. (1972) A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement, Classical Conditioning II, A.H. Black & W.F. Prokasy, Eds., pp. 64–99. Appleton-Century-Crofts.
+
+	- Novelty.R
+
+	- Uncertainty_bias.R
+
+	- Unbiased.R
+
+	- Strength_bias.R
+
+	- Bayesian_decay.R
+
+	

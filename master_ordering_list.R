@@ -1,6 +1,6 @@
 # want to save all trial orderings in a common format:
-# a list of orderings, which are in turn lists of trials,
-# each with a vector of words and objects
+# a list of orderings, which are in turn a matrix of words
+# and objects (rows=trials)
 
 # should also store the item indices of subgroups of interest
 # (e.g., different freq), and the human performance on those groups...later
