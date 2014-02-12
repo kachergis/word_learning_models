@@ -1,12 +1,6 @@
-# Associative Uncertainty- (Entropy) & Familiarity-Biased Model
+# Associative Uncertainty- (Novelty) & Familiarity-Biased Model
 # George Kachergis  george.kachergis@gmail.com
 
-shannon.entropy <- function(p) {
-	if (min(p) < 0 || sum(p) <= 0)
-		return(NA)
-	p.norm <- p[p>0]/sum(p)
-	-sum(log2(p.norm)*p.norm)
-	}
 
 update_known <- function(m, tr_w, tr_o) {
   startval = .01
@@ -34,6 +28,8 @@ model <- function(params, ord=c(), reps=1) {
 	
 	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
 	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
+	freq_w = rep(0,voc_sz) # freq[i] = times word i has appeared
+	freq_o = rep(0,ref_sz)
 	ppt = length(ord$trials[[1]]$words) # pairs per trial
 	traj = list()
 	m <- matrix(0, voc_sz, ref_sz) # association matrix
@@ -47,22 +43,21 @@ model <- function(params, ord=c(), reps=1) {
 		tr_o = as.integer(ord$objs[t,])
 		tr_o = tr_o[!is.na(tr_o)]
 		m = update_known(m, tr_w, tr_o) # what's been seen so far?
-		ent_w = c() # more entropy = more dispersive
-		for(w in tr_w) { ent_w = c(ent_w, shannon.entropy(m[w,])) }
-		ent_w = exp(B*ent_w)
+		freq_w[tr_w] = freq_w[tr_w] + 1
+		freq_o[tr_o] = freq_w[tr_o] + 1
+		novelty_w = 1/(1+freq_o[tr_w])
+		novelty_o = 1/(1+freq_o[tr_o])
 		
-		ent_o = c() # more entropy = more dispersive
-		for(o in tr_o) { ent_o = c(ent_o, shannon.entropy(m[,o])) }
-		ent_o = exp(B*ent_o)
-		
-		nent = (ent_w %*% t(ent_o))
-		#nent = nent / sum(nent)
+		novelty_w = exp(B*novelty_w)
+		novelty_o = exp(B*novelty_o)
+		nov = (novelty_w %*% t(novelty_o))
+
 		# get all current w,o strengths and normalize to distr X
 		assocs = m[tr_w,tr_o]
-		denom = sum(assocs * nent)
+		denom = sum(assocs * nov)
 		m = m*C # decay everything
 		# update associations on this trial
-		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (ent_w %*% t(ent_o))) / denom 
+		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (novelty_w %*% t(novelty_o))) / denom 
 
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
 		traj[[index]] = m

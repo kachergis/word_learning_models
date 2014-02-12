@@ -34,15 +34,18 @@ make_cooccurrence_matrix <- function(cond, print_matrix=F, heatmap_filename=c())
 	return(m)
 }
 
-run_model <- function(cond, model_name, parameters) {
+run_model <- function(cond, model_name, parameters, print_perf=F) {
 	source(paste(model_dir,model_name,".R",sep=''))
 	mod = model(parameters, ord=cond$train)
+	if(print_perf) print(mean(mod$perf))
 	return(mod)
 }
 
-mod = run_model(conds[["201"]], "kachergis", c(.03,1.08,.964))
-mod = run_model(conds[["201"]], "fazly", c(.03,1.08,.964))
-
+mod = run_model(conds[["201"]], "fazly", c(.0001,8000,.7), print_perf=T)
+mod = run_model(conds[["201"]], "kachergis", c(1,3,.97), print_perf=T)
+mod = run_model(conds[["201"]], "strength", c(1,.97), print_perf=T)
+mod = run_model(conds[["201"]], "uncertainty", c(1,3,.97), print_perf=T)
+mod = run_model(conds[["201"]], "novelty", c(1,3,.97), print_perf=T)
 
 coocs3x4 = make_cooccurrence_matrix(conds[["201"]], print_matrix=T, heatmap_filename="201")
 filt3e6l = make_cooccurrence_matrix(orders[["filt3E_6L"]])

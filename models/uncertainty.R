@@ -1,5 +1,6 @@
-# Associative Uncertainty- (Entropy) & Familiarity-Biased Model
-# George Kachergis  george.kachergis@gmail.com
+# Associative Uncertainty-/Entropy-Biased Model
+# (just the uncertainty bias of the Kachergis et al. 2012 model)
+# George Kachergis  george.kachergis@gmail.com  
 
 shannon.entropy <- function(p) {
 	if (min(p) < 0 || sum(p) <= 0)
@@ -56,13 +57,10 @@ model <- function(params, ord=c(), reps=1) {
 		ent_o = exp(B*ent_o)
 		
 		nent = (ent_w %*% t(ent_o))
-		#nent = nent / sum(nent)
-		# get all current w,o strengths and normalize to distr X
-		assocs = m[tr_w,tr_o]
-		denom = sum(assocs * nent)
+		denom = sum(nent)
 		m = m*C # decay everything
 		# update associations on this trial
-		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (ent_w %*% t(ent_o))) / denom 
+		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * (ent_w %*% t(ent_o))) / denom 
 
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
 		traj[[index]] = m
