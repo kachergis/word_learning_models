@@ -32,18 +32,19 @@ model <- function(params, ord=c(), reps=1) {
 	B <- params[2] # weighting of uncertainty vs. familiarity
 	C <- params[3] # decay
 	
-	voc_sz = max(unlist(ord), na.rm=TRUE) # vocabulary size
+	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
+	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
 	ppt = length(ord$trials[[1]]$words) # pairs per trial
-	mean_ent = c()
-	m <- matrix(0, voc_sz, voc_sz) # association matrix
+	traj = list()
+	m <- matrix(0, voc_sz, ref_sz) # association matrix
 	# training
 	for(rep in 1:reps) { # for trajectory experiments, train multiple times
-	  for(t in 1:length(ord$trials)) { 
+	  for(t in 1:nrow(ord$words)) { 
 		#print(format(m, digits=3))
 		
-		tr_w = as.integer(ord$trials[[t]]$words)
+		tr_w = as.integer(ord$words[t,])
 		tr_w = tr_w[!is.na(tr_w)]
-		tr_o = as.integer(ord$trials[[t]]$objs)
+		tr_o = as.integer(ord$objs[t,])
 		tr_o = tr_o[!is.na(tr_o)]
 		m = update_known(m, tr_w, tr_o) # what's been seen so far?
 		ent_w = c() # more entropy = more dispersive
@@ -64,7 +65,7 @@ model <- function(params, ord=c(), reps=1) {
 		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * assocs * (ent_w %*% t(ent_o))) / denom 
 
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
-		traj[index] = m
+		traj[[index]] = m
 	  }
 	}
 	m = m+.01 # test noise constant k

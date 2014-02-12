@@ -1,52 +1,47 @@
 
 
-model <- function(params, ord=c(), ord_name="", reps=1, name="fazly", save_traj=FALSE, print_matrix=FALSE) {
+model <- function(params, ord=c(), reps=1) {
 	lambda <- params[1] # small smoothing factor (1e-5)
 	beta <- params[2] # upper bound on number of symbol types to expect? (8500)
 	theta <- params[3] # threshold for knowledge (.7)
 	
-	# learning trajectory data
-	if(save_traj) {
-		traj <- data.frame(Trial=numeric(0), testtype=character(0), x=numeric(0.0))
-		ord <- read.table(paste(ord_dir,ord_name,".txt",sep=""), header=T) # ordering
-		}
-	
-	voc_sz = max(unlist(ord), na.rm=TRUE) # vocabulary size
+	traj = list()
+	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
+	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
 	dummy = voc_sz + 1
 	ppt = dim(ord)[2] # pairs per trial
 	mean_ent = c()
-	m <- matrix(0, voc_sz+1, voc_sz) # association matrix + 1 dummy/nonreferring word
-	assm <- matrix(0, voc_sz+1, voc_sz) # new 11/1/12 track assoc scores SEPARATELY
-	m[dummy,] = lambda # maybe?? Fazly doesn't specify
+	m <- matrix(0, voc_sz+1, ref_sz) # association matrix + 1 dummy/nonreferring word
+	assm <- matrix(0, voc_sz+1, ref_sz) # track assoc scores SEPARATELY
+	m[dummy,] = lambda # maybe?? unspecified in description
 	# training
 	for(rep in 1:reps) { # for trajectory experiments, train multiple times
-	  for(t in 1:length(ord$trials)) {
+	  for(t in 1:nrow(ord$words)) {
 	  	#print(format(m, digits=3))
 		
-		tr = as.integer(ord$trials[[t]]$words)
-		tr = tr[!is.na(tr)]
+		tr_w = as.integer(ord$words[t,])
+		tr_w = tr_w[!is.na(tr_w)]
+		tr_o = as.integer(ord$objs[t,])
+		tr_o = tr_o[!is.na(tr_o)]
 		
 		# calculate word-referent alignment probabilities
-		utt <- c(tr,dummy) # Fazly paper doesn't actually specify adding dummy to U(t)
-		# except for in Eqn 1's denominator, but it's gotta be done everywhere...
-		align = m[utt,tr] / colSums(m[utt,tr]) # Eqn 1
-		#assoc = m[utt,tr] + align # Eqn 2
-		assm[utt,tr] = assm[utt,tr] + align # new 11/1/12
-		#m[utt,tr] = (assoc+lambda) / (rowSums(m[utt,]) + lambda*beta) # Eqn 3
-		m[tr,tr] = (assm[tr,tr]+lambda) / (rowSums(assm[tr,]) + lambda*beta) # # new 11/1/12
+		utt <- c(tr_w,dummy) # Fazly paper doesn't actually specify adding dummy to U(t)
+		# except for in Eqn 1's denominator, but it must be done everywhere...
+		align = m[utt,tr_o] / colSums(m[utt,tr_o]) # Eqn 1
+		#assoc = m[utt,tr_o] + align # Eqn 2
+		assm[utt,tr_o] = assm[utt,tr_o] + align # new 11/1/12
+		#m[utt,tr_o] = (assoc+lambda) / (rowSums(m[utt,]) + lambda*beta) # Eqn 3
+		m[tr_w,tr_o] = (assm[tr_w,tr_o]+lambda) / (rowSums(assm[tr_w,]) + lambda*beta) # # new 11/1/12
 		
 		#comp = diag(m) / rowSums(m) # comprehension score p(oi|wi)
 		# assume learned if comp score > theta
 		#known = sum(comp>theta)
-		if(print_matrix) print(m)
-		if(save_traj & t>1) traj <- rbind(traj, data.frame(Trial=t, testtype="all", x=mean(diag(m))))
+		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
+		traj[[index]] = m
 	  }
 	  comp = diag(m) / rowSums(m)[1:voc_sz]
-	  #perf = c(perf, sum(comp>theta)/voc_sz) # mean(comp) # for fazly2
 	}
-	if(save_traj) save(traj, file=paste(name,"_",ord_name,"_traj.RData",sep=''))
-	want = list()
-	#want[['tr_ent']] = mean_ent
-	#want[['perf']] = perf
-	return(m[1:voc_sz,]) # NOT USING THETA RIGHT NOW...BUT IT DOESN'T HELP
+	perf = diag(m) / rowSums(m)[1:voc_sz] # not using theta threshold, but it only converts to binary know/not (can't help)
+	want = list(perf=perf, matrix=m[1:voc_sz,], traj=traj)
+	return(want)
 } 
