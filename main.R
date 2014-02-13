@@ -62,6 +62,12 @@ fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,10,1))
 fit_model("fazly", orders[c("orig_4x4","orig_3x3")], c(1e-10,5,.1), c(.5,20000,1))
 fit_model("Bayesian_decay", orders[1], c(1e-5,1e-5,1e-5), c(10,10,10))
 
+multinomial_likelihood_perfect <- function(par, ord) {
+	M = model(par, ord=ord)
+	pOgW = diag(M) / rowSums(M) # p(o|w)
+	lik = sum(log(pOgW))
+	return(-lik) # 18*log(1/18) = -52.02669 for AFC guessing
+}
 
 multinomial_likelihood <- function(cdat, M) {
 	M = M / rowSums(M) # p(o|w)

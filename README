@@ -16,7 +16,9 @@ Kachergis, G. (2012). Mechanisms for Cross-Situational Learning of Word-Referent
 
 
 Overview of the contents:
-main.R - contains functions to load training trial orderings, graph word-object co-occurrence matrices, and load and fit models
+main.R - contains functions to load training trial orderings, and load and fit models
+
+graphics.R - contains functions to graph word-object co-occurrence matrices and animate model performance trajectories
 
 orderings/ 
 	- contains many .txt files that have trial orders in the format 1 line per trial, and each number on a line represents the appearance of a word-object pair (e.g., 4 means both word 4 and object 4 occurred on that trial)
@@ -48,14 +50,23 @@ orderings/
 		218, 3x4.  Words appear 6 times. objects 8.  18afc. [not built from 2x2] ~.43 (13 Ss)
 		220, 3x4.  Words appear 9 times. objects 12.  18afc - high perf: ~.67 (33 Ss)
 
-	- master_orders.RData - similar structure to "asymmetrical_conditions.RData", but contain training trial orderings for several other papers:
-
+	- master_orders.RData - similar structure to "asymmetrical_conditions.RData", but contain training trial orderings for several other papers: 
+	Kachergis, G., Yu, C. & Shiffrin, R. M. (submitted). A bootstrapping model of frequency and contextual diversity effects in word learning.
+	Kachergis, G., Yu, C., & Shiffrin, R. M. (2012). An Associative Model of Adaptive Inference for Learning Word-Referent Mappings. Psychonomic Bulletin & Review, 19(2), 317-324.
 
 
 models/
 	- fazly.R - incremental probabilistic model from Fazly, A., Alishahi, A., and Stevenson, S. (2010). A probabilistic computational model of cross-situational word learning, Cognitive Science, 34(6): 1017-1063.
 	
 	- kachergis.R - Strength- and Uncertainty-biased Model from Kachergis, G., Yu, C., & Shiffrin, R.M. (2012). An Associative Model of Adaptive Inference for Learning Word-Referent Mappings. Psychonomic Bulletin & Review, 19(2), 317-324.
+
+	- novelty.R - like the kachergis.R model, but uses novelty (inverse stimulus frequency) in lieu of associate entropy
+
+	- uncertainty.R - like the kachergis.R model, but without the strength/familiarity bias
+
+	- strength.R - like the kachergis.R model, but without the entropy/uncertainty bias
+
+	- Bayesian_decay.R - a Bayesian model that strengthens all plausible (i.e., co-occurring) pairings and weakens all implausible associations based on strengthening and decay parameters
 
 	- MINERVA2.R - adaptation of the MINERVA 2 episodic memory model from Hintzman, D.L. (1984). MINERVA 2: A simulation model of human memory. Behavior Research Methods, 16(2), 96-101.
 
@@ -65,13 +76,4 @@ models/
 
 	- rescorla-wagner.R - Rescorla, R.A. & Wagner, A.R. (1972) A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement, Classical Conditioning II, A.H. Black & W.F. Prokasy, Eds., pp. 64–99. Appleton-Century-Crofts.
 
-	- Novelty.R
-
-	- Uncertainty_bias.R
-
-	- Unbiased.R
-
-	- Strength_bias.R
-
-	- Bayesian_decay.R
 
