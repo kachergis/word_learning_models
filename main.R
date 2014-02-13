@@ -1,40 +1,19 @@
 library(pso)
 
 #source("fit.R")
-#source("test.R")
-#source("graphs.R")
+source("graphics.R")
 
 order_dir = "orderings/"
 model_dir = "models/"
 
-# can load individual trial orderings like so:
-ord = read.table(paste(order_dir,"orig_4x4.txt",sep=''))
-
-# or lists of many trial orderings (and some means of human performance):
+# load lists of many trial orderings (and some means of human performance):
 load(paste(order_dir,"master_orders.RData",sep='')) # orders
 load(paste(order_dir,"asymmetric_conditions.RData",sep='')) # conds
 
-make_cooccurrence_matrix <- function(cond, print_matrix=F, heatmap_filename=c()) {
-	# makes word x object co-occurrence matrix from training list of words and objects by trial
-	# prints a heatmap if filename is specified
-	words = cond$train$words
-	objs = cond$train$objs
-	m = matrix(0, nrow=max(words), ncol=max(objs))
-	for(t in 1:nrow(words)) {
-		m[words[t,], objs[t,]] = m[words[t,], objs[t,]] + 1
-	}
-	
-	if(print_matrix==T) print(m)
-	if(length(heatmap_filename>0)) {
-		pdf(paste(heatmap_filename,".pdf",sep="")) 
-		heatmap(m, Rowv = NA, Colv = "Rowv",  scale="none", margin=c(3,3), xlab="Object", ylab="Word", col=heat.colors(10)) 
-		# labRow=NA, labCol=NA
-		dev.off()
-	}
-	return(m)
-}
+
 
 run_model <- function(cond, model_name, parameters, print_perf=F) {
+	require(pso) # or require(DEoptim)
 	source(paste(model_dir,model_name,".R",sep=''))
 	mod = model(parameters, ord=cond$train)
 	if(print_perf) print(mean(mod$perf))
@@ -42,67 +21,92 @@ run_model <- function(cond, model_name, parameters, print_perf=F) {
 }
 
 mod = run_model(conds[["201"]], "fazly", c(.0001,8000,.7), print_perf=T)
+animate_trajectory(mod)
+
 mod = run_model(conds[["201"]], "kachergis", c(1,3,.97), print_perf=T)
 mod = run_model(conds[["201"]], "strength", c(1,.97), print_perf=T)
 mod = run_model(conds[["201"]], "uncertainty", c(1,3,.97), print_perf=T)
 mod = run_model(conds[["201"]], "novelty", c(1,3,.97), print_perf=T)
+mod = run_model(conds[["201"]], "Bayesian_decay", c(.7,1.7,1), print_perf=T)
 
 coocs3x4 = make_cooccurrence_matrix(conds[["201"]], print_matrix=T, heatmap_filename="201")
 filt3e6l = make_cooccurrence_matrix(orders[["filt3E_6L"]])
 
-fit_by_subj_hyp <- function(modeln, PSO=FALSE) {
-	source(paste(modeln,".R",sep="")) 
-	ord = read.table(paste(folder,"orig_order_study_9s-corrected.txt",sep=''))
-	load("humans/priming_all_trajectory.RData") # all
-	agg <- subset(all, Exp=="4 Pairs/Trial, 6x")
-	agg <- with(agg, aggregate(Correct, list(Block=Block, Subject=Subject), mean))
-	agg$forget <- NA
-	agg$store <- NA
-	agg$SSE <- NA
-	agg$Model <- NA
-	for(s in unique(agg$Subject)) {
-		sdat <- subset(agg, Subject==s)
-		if(PSO) {
-			best <- psoptim(c(.05), fit_subj_traj_samp, ord=ord, perf=sdat$x, lower=c(0), upper=c(1)) 
-		} else {
-			best <- optim(c(.05,.9), fit_subj_traj_samp, ord=ord, perf=sdat$x, lower=c(0,0), upper=c(1,1), method="L-BFGS-B", control=list(parscale=c(10,10), maxit=30)) 
-		}
-		rows <- with(sdat, which(agg$Subject==Subject))
-		mp = model(best$par, ord, reps=length(rows))
-		agg[rows,c("forget","store")] = matrix(rep(best$par, length(rows)), nrow=length(rows), byrow=T)
-		agg[rows,]$SSE = best$value
-		agg[rows,]$Model <- mp
-		print(agg[rows,])
+fit_model <- function(model_name, orders, par_lower, par_upper) {
+	require(pso)
+	source(paste(model_dir,model_name,".R",sep=''))
+	fits = list()
+	startt = Sys.time()
+	cat("Order\tSSE\tParameters")
+	for(i in 1:length(names(orders))) {
+		best <- psoptim(c(.1,1,.97), meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$hum_perf), lower=par_lower, upper=par_upper) 
+		cat(names(orders)[i],'\t',best$value,'\t',best$par)
+		mod = model(best$par, ord=orders[[i]]$train)
+		fits[[names(orders)[i]]] = list(SSE=best$value, par=best$par, perf=mod$perf)
 	}
-	return(agg)
+	stopt = Sys.time()
+	print(stopt-startt)
+	return(fits)
 }
 
 
-fit_by_subj <- function(modeln, PSO=FALSE, K=1) {
-	source(paste(modeln,".R",sep="")) 
-	ord = read.table(paste(order_dir,"orig_order_study_9s-corrected.txt",sep=''))
-	load("humans/priming_all_trajectory.RData") # all
-	agg <- subset(all, Exp=="4 Pairs/Trial, 6x")
-	agg <- with(agg, aggregate(Correct, list(Block=Block, Subject=Subject), mean))
-	agg$X <- NA
-	agg$B <- NA
-	agg$C <- NA
-	agg$SSE <- NA
-	agg$Model <- NA
-	for(s in unique(agg$Subject)) {
-		sdat <- subset(agg, Subject==s)
-		if(PSO) {
-			best <- psoptim(c(.8,2.25,.95), fit_subj_traj_samp, ord=ord, perf=sdat$x, K=K, lower=c(0,1,.8), upper=c(30,7,1)) 
-		} else {
-			best <- optim(c(.03,1.08,.964), fit_subj_traj_samp, ord=ord, perf=sdat$x, K=K, lower=c(0,1,.8), upper=c(30,7,1), method="L-BFGS-B", control=list(parscale=c(10,10,10), maxit=20)) 
-		}
-		rows <- with(sdat, which(agg$Subject==Subject))
-		mp = model(best$par, ord, reps=length(rows))
-		agg[rows,c("X","B","C")] = matrix(rep(best$par, length(rows)), nrow=length(rows), byrow=T)
-		agg[rows,]$SSE = best$value
-		agg[rows,]$Model <- mp
-		print(agg[rows,])
-	}
-	return(agg)
+meanSSE <- function(par, order, human_perf) {
+	mod = model(par, order)
+	# if there is an item grouping factor, can first aggregate item perf by the factor
+	return((mean(mod$perf)-human_perf)^2)
 }
 
+
+fit_model("kachergis", orders[1], c(.001,.1,.5), c(5,10,1))
+fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,10,1))
+fit_model("fazly", orders[c("orig_4x4","orig_3x3")], c(1e-10,5,.1), c(.5,20000,1))
+fit_model("Bayesian_decay", orders[1], c(1e-5,1e-5,1e-5), c(10,10,10))
+
+
+multinomial_likelihood <- function(cdat, M) {
+	M = M / rowSums(M) # p(o|w)
+	lik = 0
+	for(i in 1:dim(cdat)[1]) { 
+		wordi = cdat[i,"Word"]
+		response_probs = M[wordi,unlist(cdat[i,c("Obj1","Obj2","Obj3","Obj4")])] # strengths of test objects
+		resp = cdat[wordi,]$Response  #resp = cdat[which(cdat$Word==i),]$Response
+		lik = lik + log(M[wordi,resp] / sum(response_probs)) 
+	}
+	return(-lik) # minimize -loglik
+}
+
+
+binomial_likelihood <- function(cdat, M) {
+	est_prob = diag(M) / rowSums(M) # prob correct
+	lik = 0
+	for(i in 1:length(cdat)) { # dim(M)[1]
+		resp = cdat[i]
+		if(resp==i) {
+			lik = lik + log(est_prob[i])
+		} else {
+			lik = lik + log(1-est_prob[i])
+		}
+	}
+	return(lik) # 18*log(1/18) = -52.02669 for guessing
+}
+
+
+fit_subj <- function(par, ord, sdat) {
+	tot_lik = 0
+	M <- model(par, ord=ord)
+	# need: for each word (CorrectAns), what object they chose (Response)
+	mlik = binomial_likelihood(sdat, M)
+	return(-mlik)
+}
+
+fit_all <- function(par, ord, dat) {
+	tot_lik = 0
+	for(s in dim(dat)[1]) {
+		sdat <- unlist(dat[s,])
+		M <- model(par, ord=ord)
+		# need: for each word (CorrectAns), what object they chose (Response)
+		tot_lik = tot_lik + binomial_likelihood(sdat, M)
+	}
+	mlik = tot_lik #/ length(unique(dat$Subject))
+	return(-mlik)
+}

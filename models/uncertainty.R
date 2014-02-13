@@ -28,7 +28,7 @@ update_known <- function(m, tr_w, tr_o) {
 }
 
 
-model <- function(params, ord=c(), reps=1) {
+model <- function(params, ord=c(), reps=1, test_noise=.01) {
 	X <- params[1] # associative weight to distribute
 	B <- params[2] # weighting of uncertainty vs. familiarity
 	C <- params[3] # decay
@@ -66,7 +66,7 @@ model <- function(params, ord=c(), reps=1) {
 		traj[[index]] = m
 	  }
 	}
-	m = m+.01 # test noise constant k
+	m = m+test_noise # test noise constant k
 	perf = diag(m) / rowSums(m)
 	want = list(perf=perf, matrix=m, traj=traj)
 	return(want)

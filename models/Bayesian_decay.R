@@ -1,82 +1,75 @@
 # Bayesian model of cross situational learning
-# Stephen Denton, Apr. 20, 2010
-rm(list=ls(all=TRUE))
-graphics.off()
-
-# Define noise probability (when alpha = 0, Bayesian model is a deterministic 'ideal observer')
-alpha = .5 # 0.1, 0.5, 0.9
-# Multiplier for word/object co-occurences (set to 1 for no increase)
-delta = 1
-chDec = 1
-
-# Define number of words (equals number of objects)
-nWords = 10 
-
-ones = rep(1, nWords)
-condPrior = rep(1/nWords, nWords)
-pWgO = outer(ones,condPrior)
-pW_O = outer(condPrior,condPrior)
-dimnames(pWgO) = list(LETTERS[1:nWords], letters[1:nWords])
-cat('\nPrior Conditional Probability of Words (rows) given Objects (columns)\n')
-print(pWgO)
-
-dimnames(pW_O) = dimnames(pWgO)
-cat('\nPrior Joint Probability of Words (rows) and Objects (columns)\n')
-print(pW_O)
-
-words = c(1,1,1,1,0,0,0,0,0,0)
-objs = c(1,1,1,1,0,0,0,0,0,0)
+# originally conceived by Stephen Denton, Apr. 20, 2010
 
 # Define a simple likelihood function that only updates appropriate rows and columns
-likelihoodFun = function(words,objs) {
-  ## With alpha=0, this enforces a mutual exclusivity constraint...
-  mat = outer(words,objs) + outer(!words,!objs)
-  ## Can relax mutual exclusivity contraint by increasing alpha or allowing for one of the following
-  ## 1) Objects can have multiple words applied to them
-  # mat = outer(words,objs) + outer(!words,ones)
-  ## 2) Words can refer to multiple objects
-  # mat = outer(words,objs) + outer(ones,!objs)
-  likelihood = alpha^(1-mat) # + (delta-1) * outer(words,objs)
-  return(likelihood)
-  }
-
-trnWords = matrix( c(
-    c(1,1,1,1,0,0,0,0,0,0),  # A,B,C,D
-    c(0,0,0,0,1,1,1,1,0,0),  # E,F,G,H
-    c(1,1,0,0,0,0,0,0,1,1),  # A,B,I,J
-    c(1,0,0,0,0,0,1,1,1,0)   # A,G,H,I
-    ), ncol=10, byrow=T )
-    
-trnObjs = matrix( c(
-    c(1,1,1,1,0,0,0,0,0,0),  # a,b,c,d
-    c(0,0,0,0,1,1,1,1,0,0),  # etc.
-    c(1,1,0,0,0,0,0,0,1,1),
-    c(1,0,0,0,0,0,1,1,1,0)
-    ), ncol=10, byrow=T )
-
-# Train the model and update belief probabilities
-for (trnIdx in 1:dim(trnWords)[1] ) {
-    cat('\nTrial ', trnIdx, ': \n', sep='')
-    likelihood = likelihoodFun( trnWords[trnIdx,], trnObjs[trnIdx,] )
-    pWgO = likelihood * pWgO
-    pWgO = pWgO/outer(ones,colSums(pWgO)) # rowSums(pWgO)
-    cat('Conditional Probability of Words (rows) given Objects (columns)\n')
-    print(pWgO)
-    pW_O = likelihood * pW_O
-    pW_O = pW_O/sum(pW_O)
-    cat('Joint Probability of Words (rows) and Objects (columns)\n')
-    print(pW_O)
+likelihoodFun = function(words, objs, alpha, delta) {
+	## With alpha=0, this enforces a mutual exclusivity constraint...
+	mat = outer(words,objs) + outer(!words,!objs)
+	## Can relax mutual exclusivity contraint by increasing alpha or allowing for one of the following
+	## 1) Objects can have multiple words applied to them
+	# mat = outer(words,objs) + outer(!words,ones)
+	## 2) Words can refer to multiple objects
+	# mat = outer(words,objs) + outer(ones,!objs)
+	likelihood = alpha^(1-mat) + (delta-1) * outer(words,objs)
+	return(likelihood)
 }
 
-cat('\nWord Choice Probabilities when object (a) is presented (calculated from joint):\n')
-pWg_a = pW_O[,'a']^chDec/sum(pW_O[,'a']^chDec)
-print(pWg_a)
+model <- function(params, ord=c(), reps=1, verbose=F) {
+	# Define noise probability (when alpha = 0, Bayesian model is a deterministic 'ideal observer')
+	alpha <- params[1] # 0.1, 0.5, 0.9 decay for word/object non-co-occurrence
+	delta <- params[2] # Multiplier for word/object co-occurrence (set to 1 for no increase)
+	chDec <- params[3] # Decision parameter (e.g., 1)
 
+	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
+	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
+	traj = list()
+	
+	ones = rep(1, voc_sz)
+	pWgO <- matrix(1/ref_sz, voc_sz, ref_sz) # prob(word|object) matrix
+	pW_O <- matrix(1/(ref_sz*voc_sz), voc_sz, ref_sz)
+	# training
+	for(rep in 1:reps) { # for trajectory experiments, train multiple times
+	  for(t in 1:nrow(ord$words)) { 
+		tr_w = as.integer(ord$words[t,])
+		tr_w = tr_w[!is.na(tr_w)]
+		tr_o = as.integer(ord$objs[t,])
+		tr_o = tr_o[!is.na(tr_o)]
+		
+		words_tr = rep(0,voc_sz)
+		objects_tr = rep(0,ref_sz)
+		words_tr[tr_w] = 1
+		objects_tr[tr_o] = 1
+		
+		likelihood = likelihoodFun(words_tr, objects_tr, alpha, delta)
+		pWgO = likelihood * pWgO
+		pWgO = pWgO/outer(ones,colSums(pWgO)) # rowSums(pWgO)
+		pW_O = likelihood * pW_O
+		pW_O = pW_O/sum(pW_O)
+		
+		if(verbose) {
+			cat('Conditional Probability of Words (rows) given Objects (columns)\n')
+			print(pWgO)
+			cat('Joint Probability of Words (rows) and Objects (columns)\n')
+			print(pW_O) 
+		}
+		
+		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
+		traj[[index]] = pWgO
+	  }
+	}
+	#perf = diag(pWgO) / rowSums(pWgO) # no, we'll use parameterized choice
+	# calculated from joint probs
+	#perf = diag(pW_O)^chDec / sum(pW_O^chDec) # rowSums(pW_O^chDec)
+	
+	# power choice rule
+	chProb = pWgO^chDec / outer(ones,colSums(pWgO^chDec))
+	perf = diag(chProb) # same as diag(pWgO)^chDec / colSums(pWgO^chDec)
 
-cat('\nChoice Probabilities for each word given each object (using power choice rule):\n')
-chProb = pWgO^chDec / outer(ones,colSums(pWgO^chDec))
-print(chProb)
+	#cat('\nChoice Probabilities for each word given each object (using exp choice rule):\n')
+	#chProb = exp(chDec*pWgO) / outer(ones,colSums(exp(chDec*pWgO)))
+	#cat(diag(chProb))
+	
+	want = list(perf=perf, matrix=chProb, traj=traj)
+	return(want)
+	}
 
-#cat('\nChoice Probabilities for each word given each object (using exp choice rule):\n')
-#chProb = exp(chDec*pWgO) / outer(ones,colSums(exp(chDec*pWgO)))
-#print(chProb)
