@@ -32,6 +32,7 @@ model <- function(params, ord=c(), reps=1, test_noise=.01) {
 	freq_o = rep(0,ref_sz)
 	traj = list()
 	m <- matrix(0, voc_sz, ref_sz) # association matrix
+	perf = matrix(0, reps, voc_sz) # a row for each block
 	# training
 	for(rep in 1:reps) { # for trajectory experiments, train multiple times
 	  for(t in 1:nrow(ord$words)) { 
@@ -61,9 +62,10 @@ model <- function(params, ord=c(), reps=1, test_noise=.01) {
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
 		traj[[index]] = m
 	  }
+	m_test = m+test_noise # test noise constant k
+	perf[rep,] = diag(m_test) / rowSums(m_test)
 	}
-	m = m+test_noise # test noise constant k
-	perf = diag(m) / rowSums(m)
+	
 	want = list(perf=perf, matrix=m, traj=traj)
 	return(want)
 	}

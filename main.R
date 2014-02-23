@@ -28,6 +28,7 @@ mod = run_model(conds[["201"]], "strength", c(1,.97), print_perf=T)
 mod = run_model(conds[["201"]], "uncertainty", c(1,3,.97), print_perf=T)
 mod = run_model(conds[["201"]], "novelty", c(1,3,.97), print_perf=T)
 mod = run_model(conds[["201"]], "Bayesian_decay", c(.7,1.7,1), print_perf=T)
+mod = run_model(conds[["201"]], "rescorla-wagner", c(.7,1.7,1), print_perf=T)
 
 coocs3x4 = make_cooccurrence_matrix(conds[["201"]], print_matrix=T, heatmap_filename="201")
 filt3e6l = make_cooccurrence_matrix(orders[["filt3E_6L"]])
@@ -37,10 +38,10 @@ fit_model <- function(model_name, orders, par_lower, par_upper) {
 	source(paste(model_dir,model_name,".R",sep=''))
 	fits = list()
 	startt = Sys.time()
-	cat("Order\tSSE\tParameters")
+	cat("Order\tSSE\tParameters\n")
 	for(i in 1:length(names(orders))) {
 		best <- psoptim(c(.1,1,.97), meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$hum_perf), lower=par_lower, upper=par_upper) 
-		cat(names(orders)[i],'\t',best$value,'\t',best$par)
+		cat(names(orders)[i],'\t',best$value,'\t',best$par,'\n')
 		mod = model(best$par, ord=orders[[i]]$train)
 		fits[[names(orders)[i]]] = list(SSE=best$value, par=best$par, perf=mod$perf)
 	}
@@ -60,7 +61,7 @@ meanSSE <- function(par, order, human_perf) {
 fit_model("kachergis", orders[1], c(.001,.1,.5), c(5,10,1))
 fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,10,1))
 fit_model("fazly", orders[c("orig_4x4","orig_3x3")], c(1e-10,5,.1), c(.5,20000,1))
-fit_model("Bayesian_decay", orders[1], c(1e-5,1e-5,1e-5), c(10,10,10))
+fit_model("Bayesian_decay", orders[c("orig_4x4","orig_3x3")], c(1e-5,1e-5,1e-5), c(10,10,10))
 
 multinomial_likelihood_perfect <- function(par, ord) {
 	M = model(par, ord=ord)
