@@ -1,16 +1,19 @@
-library(pso)
+require(pso)
 
 #source("fit.R")
 source("graphics.R")
 
 order_dir = "orderings/"
 model_dir = "models/"
+data_dir = "data/"
 
 # load lists of many trial orderings (and some means of human performance):
 load(paste(order_dir,"master_orders.RData",sep='')) # orders
 load(paste(order_dir,"asymmetric_conditions.RData",sep='')) # conds
+print(names(orders))
+print(names(conds))
 
-
+load(paste(data_dir,"asym_master.RData",sep='')) # raw
 
 run_model <- function(cond, model_name, parameters, print_perf=F) {
 	require(pso) # or require(DEoptim)
@@ -20,8 +23,21 @@ run_model <- function(cond, model_name, parameters, print_perf=F) {
 	return(mod)
 }
 
+animate_trajectories <- function(models, conds, condnames) {
+	for(m in models) {
+		for(cname in condnames) {
+			
+		}
+	}
+}
+
+models = c("kachergis", "strength", "uncertainty", "novelty", "Bayesian_decay", "rescorla_wagner")
+condnames = c("orig_3x3","freq369-3x3hiCD","freq369-3x3loCD")
+animate_trajectories(models, orders, condnames)
+
 mod = run_model(conds[["201"]], "fazly", c(.0001,8000,.7), print_perf=T)
-animate_trajectory(mod)
+animate_trajectory(mod, "fazly", "201")
+
 
 mod = run_model(conds[["201"]], "kachergis", c(1,3,.97), print_perf=T)
 mod = run_model(conds[["201"]], "strength", c(1,.97), print_perf=T)
@@ -34,14 +50,13 @@ coocs3x4 = make_cooccurrence_matrix(conds[["201"]], print_matrix=T, heatmap_file
 filt3e6l = make_cooccurrence_matrix(orders[["filt3E_6L"]])
 
 fit_model <- function(model_name, orders, par_lower, par_upper) {
-	require(pso)
 	source(paste(model_dir,model_name,".R",sep=''))
 	fits = list()
 	startt = Sys.time()
-	cat("Order\tSSE\tParameters\n")
+	cat("Model\tOrder\tSSE\tParameters\n")
 	for(i in 1:length(names(orders))) {
-		best <- psoptim(c(.1,1,.97), meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$hum_perf), lower=par_lower, upper=par_upper) 
-		cat(names(orders)[i],'\t',best$value,'\t',best$par,'\n')
+		best <- psoptim(c(.1,1,.97), meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$HumanItemAcc), lower=par_lower, upper=par_upper) 
+		cat(model_name,'\t',names(orders)[i],'\t',best$value,'\t',best$par,'\n')
 		mod = model(best$par, ord=orders[[i]]$train)
 		fits[[names(orders)[i]]] = list(SSE=best$value, par=best$par, perf=mod$perf)
 	}
@@ -54,14 +69,32 @@ fit_model <- function(model_name, orders, par_lower, par_upper) {
 meanSSE <- function(par, order, human_perf) {
 	mod = model(par, order)
 	# if there is an item grouping factor, can first aggregate item perf by the factor
-	return((mean(mod$perf)-human_perf)^2)
+	#if(names(order$groups)!="all") { }
+	return(sum((mod$perf-human_perf)^2))
 }
 
+mod = run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(.7,1,1), print_perf=T)
 
-fit_model("kachergis", orders[1], c(.001,.1,.5), c(5,10,1))
-fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,10,1))
-fit_model("fazly", orders[c("orig_4x4","orig_3x3")], c(1e-10,5,.1), c(.5,20000,1))
-fit_model("Bayesian_decay", orders[c("orig_4x4","orig_3x3")], c(1e-5,1e-5,1e-5), c(10,10,10))
+mod = run_model(conds[["211"]], "kachergis", c(1,3,.97), print_perf=T)
+
+fit_model("kachergis", orders[1], c(.001,.1,.5), c(5,15,1))
+fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,15,1))
+
+fit_model("kachergis", conds, c(.001,.1,.5), c(5,15,1))
+
+conds_with_data = c(paste(201:207),paste(215:225)) # 211-214 had 4afc test trials and so need special test code
+fit_model("kachergis", conds[conds_with_data], c(.001,.1,.5), c(5,15,1))
+fit_model("strength", conds[conds_with_data], c(.001,.1), c(5,1))
+fit_model("fazly", conds[conds_with_data], c(1e-10,5,.1), c(.5,20000,1))
+fit_model("Bayesian_decay", conds[conds_with_data], c(1e-5,1e-5,1e-5), c(10,10,10))
+
+condnames = c("orig_3x3","freq369-3x3hiCD","freq369-3x3loCD")
+fit_model("kachergis", orders[condnames], c(.001,.1,.5), c(5,15,1))
+fit_model("strength", orders[condnames, c(.001,.1), c(5,1))
+fit_model("fazly", orders[condnames], c(1e-10,5,.1), c(.5,20000,1))
+fit_model("Bayesian_decay", orders[condnames], c(1e-5,1e-5,1e-5), c(10,10,10))
+
+run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(5.569798, 8.028788, 3.048987), print_perf=T)
 
 multinomial_likelihood_perfect <- function(par, ord) {
 	M = model(par, ord=ord)

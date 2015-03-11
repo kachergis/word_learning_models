@@ -21,7 +21,7 @@ make_cooccurrence_matrix <- function(cond, print_matrix=F, heatmap_filename=c())
 }
 
 
-animate_trajectory <- function(mod) {
+animate_trajectory <- function(mod, modname='', condname='') {
 	# creates an animation of a model's word-object associations
 	require(animation)
 	ani.options(interval=.1) # delay between frames
@@ -34,5 +34,5 @@ animate_trajectory <- function(mod) {
 			mm = mm / rowSums(mm) # row normalize
 			heatmap(mm, Rowv=NA, Colv="Rowv", scale="none", margin=c(3,3), breaks=breaks, xlab="Object", ylab="Word", col=col.range) 
 		}
-	})
+	}, movie.name=paste(modname,"_model",condname,"_cond_trajectory.gif",sep=''))
 }

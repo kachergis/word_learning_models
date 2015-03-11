@@ -16,12 +16,12 @@ update_known <- function(m, tr_w, tr_o) {
     for(c in 1:dim(m)[2]) {
       if(sum(m[,c]>0) & m[i,c]==0) {
         m[i,c] = startval
-        m[c,i] = startval
+        if(c<nrow(m)) m[c,i] = startval
       }
     }
     for(j in tr_o) {
       if(m[i,j]==0) m[i,j] = startval
-      if(m[j,i]==0) m[j,i] = startval
+      if(j<nrow(m) && m[j,i]==0) m[j,i] = startval
     }
   }
   return(m)
