@@ -44,7 +44,7 @@ model <- function(params, ord=c(), reps=1, test_noise=.01) {
 		tr_o = tr_o[!is.na(tr_o)]
 		m = update_known(m, tr_w, tr_o) # what's been seen so far?
 		freq_w[tr_w] = freq_w[tr_w] + 1
-		freq_o[tr_o] = freq_w[tr_o] + 1
+		freq_o[tr_o] = freq_o[tr_o] + 1
 		novelty_w = 1/(1+freq_o[tr_w])
 		novelty_o = 1/(1+freq_o[tr_o])
 		

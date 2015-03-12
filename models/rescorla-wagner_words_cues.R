@@ -25,10 +25,9 @@ model <- function(params, ord=c(), reps=1, test_noise=0) {
 		tr_o = as.integer(ord$objs[t,])
 		tr_o = tr_o[!is.na(tr_o)]
 	  
-		# if objects are cues that predict words, then we want colSums;
 		# if words are cues, use rowSums--but only of the currently-presented stimuli
-    if(length(tr_w)>1) {
-		  pred = colSums(m[tr_w,tr_o])
+    if(length(tr_o)>1 & length(tr_w)>1) {
+		  pred = rowSums(m[tr_w,tr_o])
     } else {
       pred = m[tr_w,tr_o]
     }
