@@ -79,30 +79,37 @@ todam_test <- function(M, words, objects, X) {
 	return(correct) 
 	}
 
-model <- function(ord, params, voc_sz) {
+model <- function(params, ord=c(), reps=1, verbose=False) {
 	D = 2000 # dimensionality of vectors (param?)
 	X <- params[1] # scalar for cos similarity...
 	#alpha <- params[1] # decay for M
 	#gamma <- params[2]
 	#omega <- params[3]
 	M <- rep(0, D)
+	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
+	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
+	traj = list()
 	words <- generate_vectors(voc_sz, D)
 	objects <- generate_vectors(voc_sz, D)
-	trial_sz = dim(ord)[2]
 	# training
-	for(t in 1:dim(ord)[1]) { 		
-		tr = ord[t,]
-		
-		for(w in 1:trial_sz) {
-			for(p in 1:trial_sz) {
-				w_rep <- words[as.integer(tr[w]),]
-				o_rep <- objects[as.integer(tr[p]),]
-				M = M + w_rep + o_rep + convo(w_rep, o_rep)
-				#M = alpha*M + gamma*(w_rep + o_rep) + omega*convo(w_rep, o_rep)
+	for(rep in 1:reps) {
+		for(t in 1:dim(ord)[1]) { 
+			tr_w = as.integer(ord$words[t,])
+			tr_w = tr_w[!is.na(tr_w)]
+			tr_o = as.integer(ord$objs[t,])
+			tr_o = tr_o[!is.na(tr_o)]
+			
+			for(w in 1:length(tr_w)) {
+				for(p in 1:length(tr_o)) {
+					w_rep <- words[tr_w[w],]
+					o_rep <- objects[tr_o[p],]
+					M = M + w_rep + o_rep + convo(w_rep, o_rep)
+					#M = alpha*M + gamma*(w_rep + o_rep) + omega*convo(w_rep, o_rep)
 				}
-			}
-		
+			}	
 		}
+		
+	}
 	return(todam_test(M, words, objects, X))
 	}
 

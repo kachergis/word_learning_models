@@ -83,10 +83,15 @@ fit_model("kachergis", orders[c(1,5,9)], c(.001,.1,.5), c(5,15,1))
 fit_model("kachergis", conds, c(.001,.1,.5), c(5,15,1))
 
 conds_with_data = c(paste(201:207),paste(215:225)) # 211-214 had 4afc test trials and so need special test code
+conds_with_data = c(paste(201:207),"215","216","219",paste(221:225))
 fit_model("kachergis", conds[conds_with_data], c(.001,.1,.5), c(5,15,1))
 fit_model("strength", conds[conds_with_data], c(.001,.1), c(5,1))
 fit_model("fazly", conds[conds_with_data], c(1e-10,5,.1), c(.5,20000,1))
 fit_model("Bayesian_decay", conds[conds_with_data], c(1e-5,1e-5,1e-5), c(10,10,10))
+
+unc = fit_model("uncertainty", conds[conds_with_data], c(.001,.1), c(5,15))
+nov = fit_model("novelty", conds[conds_with_data], c(.001,.1), c(5,15))
+rw = fit_model("rescorla-wagner", conds[conds_with_data], c(.0001,.1, .1), c(5,1,5))
 
 condnames = c("orig_3x3","freq369-3x3hiCD","freq369-3x3loCD")
 fit_model("kachergis", orders[condnames], c(.001,.1,.5), c(5,15,1))
