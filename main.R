@@ -51,11 +51,12 @@ filt3e6l = make_cooccurrence_matrix(orders[["filt3E_6L"]])
 
 fit_model <- function(model_name, orders, par_lower, par_upper) {
 	source(paste(model_dir,model_name,".R",sep=''))
+  par_init = (par_lower + par_upper) / 2
 	fits = list()
 	startt = Sys.time()
 	cat("Model\tOrder\tSSE\tParameters\n")
 	for(i in names(orders)) {
-		best <- psoptim(c(.1,1,.97), meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$HumanItemAcc), lower=par_lower, upper=par_upper) 
+		best <- psoptim(par_init, meanSSE, ord=orders[[i]]$train, human_perf=unlist(orders[[i]]$HumanItemAcc), lower=par_lower, upper=par_upper) 
 		cat(model_name,'\t',i,'\t',best$value,'\t',best$par,'\n')
 		mod = model(best$par, ord=orders[[i]]$train)
 		fits[[names(orders)[i]]] = list(SSE=best$value, par=best$par, perf=mod$perf)
@@ -89,8 +90,8 @@ fit_model("strength", conds[conds_with_data], c(.001,.1), c(5,1))
 fit_model("fazly", conds[conds_with_data], c(1e-10,5,.1), c(.5,20000,1))
 fit_model("Bayesian_decay", conds[conds_with_data], c(1e-5,1e-5,1e-5), c(10,10,10))
 
-unc = fit_model("uncertainty", conds[conds_with_data], c(.001,.1), c(5,15))
-nov = fit_model("novelty", conds[conds_with_data], c(.001,.1), c(5,15))
+unc = fit_model("uncertainty", conds[conds_with_data], c(.001,.1,.5), c(5,15,1))
+nov = fit_model("novelty", conds[conds_with_data], c(.001,.1,.5), c(5,15,1))
 rwo = fit_model("rescorla-wagner", conds[conds_with_data], c(.0001,.1, .1), c(10,1,10))
 rww = fit_model("rescorla-wagner_words_cues", conds[conds_with_data], c(.0001,.1, .1), c(10,1,10))
 
@@ -99,12 +100,16 @@ ka = fit_model("kachergis", orders[condnames], c(.001,.1,.5), c(5,15,1))
 str = fit_model("strength", orders[condnames], c(.001,.1), c(5,1))
 faz = fit_model("fazly", orders[condnames], c(1e-10,5,.1), c(.5,20000,1))
 bay = fit_model("Bayesian_decay", orders[condnames], c(1e-5,1e-5,1e-5), c(10,10,10))
-unc = fit_model("uncertainty", conds[condnames], c(.001,.1), c(5,15))
-nov = fit_model("novelty", conds[condnames], c(.001,.1), c(5,15))
-rwo = fit_model("rescorla-wagner", conds[condnames], c(.0001,.1, .1), c(10,1,10))
-rww = fit_model("rescorla-wagner_words_cues", conds[condnames], c(.0001,.1, .1), c(10,1,10))
+unc = fit_model("uncertainty", orders[condnames], c(.01,.5), c(15,1))
+nov = fit_model("novelty", orders[condnames], c(.001,.01,.5), c(5,15,1))
+rwo = fit_model("rescorla-wagner", orders[condnames], c(.0001,.01, .01), c(10,1,10))
+rww = fit_model("rescorla-wagner_words_cues", orders[condnames], c(.0001,.01, .01), c(10,1,10))
 
-run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(5.569798, 8.028788, 3.048987), print_perf=T)
+#run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(5.569798, 8.028788, 3.048987), print_perf=T)
+
+faz2f = fit_model("fazly2", orders[condnames], c(1e-10,5,.1), c(.5,20000,1))
+faz2a = fit_model("fazly2", conds[conds_with_data], c(1e-10,5,.1), c(.5,20000,1))
+
 
 multinomial_likelihood_perfect <- function(par, ord) {
 	M = model(par, ord=ord)

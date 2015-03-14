@@ -21,7 +21,7 @@ update_known <- function(m, tr_w, tr_o) {
 }
 
 
-model <- function(params, ord=c(), reps=1, test_noise=.01) {
+model <- function(params, ord=c(), reps=1, test_noise=0) {
 	X <- params[1] # associative weight to distribute
 	B <- params[2] # weighting of uncertainty vs. familiarity
 	C <- params[3] # decay

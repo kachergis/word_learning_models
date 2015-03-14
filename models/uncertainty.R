@@ -28,14 +28,11 @@ update_known <- function(m, tr_w, tr_o) {
 }
 
 
-model <- function(params, ord=c(), reps=1, test_noise=.01) {
-	X <- params[1] # associative weight to distribute
-	B <- params[2] # weighting of uncertainty vs. familiarity
-	C <- params[3] # decay
-	
+model <- function(params, ord=c(), reps=1, test_noise=0) {
+	B <- params[1] # weighting of uncertainty vs. familiarity
+	C <- params[2] # decay
 	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
 	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
-	ppt = length(ord$trials[[1]]$words) # pairs per trial
 	traj = list()
 	m <- matrix(0, voc_sz, ref_sz) # association matrix
 	perf = matrix(0, reps, voc_sz) # a row for each block
@@ -61,7 +58,7 @@ model <- function(params, ord=c(), reps=1, test_noise=.01) {
 		denom = sum(nent)
 		m = m*C # decay everything
 		# update associations on this trial
-		m[tr_w,tr_o] = m[tr_w,tr_o] + (X * (ent_w %*% t(ent_o))) / denom 
+		m[tr_w,tr_o] = m[tr_w,tr_o] + (ent_w %*% t(ent_o)) / denom 
 
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
 		traj[[index]] = m
