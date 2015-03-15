@@ -23,20 +23,26 @@ run_model <- function(cond, model_name, parameters, print_perf=F) {
 	return(mod)
 }
 
-animate_trajectories <- function(models, conds, condnames) {
+animate_trajectories <- function(models, conds, condnames, params) {
 	for(m in models) {
 		for(cname in condnames) {
-			
+		  mod = run_model(conds[[cname]], "fazly", c(.0001,8000,.7), print_perf=T)
+		  animate_trajectory(mod, m, cname)
 		}
 	}
 }
 
 models = c("kachergis", "strength", "uncertainty", "novelty", "Bayesian_decay", "rescorla_wagner")
 condnames = c("orig_3x3","freq369-3x3hiCD","freq369-3x3loCD")
-animate_trajectories(models, orders, condnames)
 
-mod = run_model(conds[["201"]], "fazly", c(.0001,8000,.7), print_perf=T)
-animate_trajectory(mod, "fazly", "201")
+
+models = c("kachergis","fazly2","fazly","rescorla-wagner")
+params = list("kachergis"=c(0.02470323,0.4890386,0.977897), "fazly2"=c(0.0009958718,5,9.736636e-09), "fazly"=c(0.01557498,20000,0.1003937), "rescorla-wagner"=c(0.08853654,0.9636937,6.48722)) # best from cond 207 (arbitrarily) 4x4 + 2 w/o
+animate_trajectories(models, orders, condnames, params)
+
+
+#mod = run_model(conds[["201"]], "fazly", c(.0001,8000,.7), print_perf=T)
+#animate_trajectory(mod, "fazly", "201")
 
 
 mod = run_model(conds[["201"]], "kachergis", c(1,3,.97), print_perf=T)
@@ -107,9 +113,10 @@ rww = fit_model("rescorla-wagner_words_cues", orders[condnames], c(.0001,.01, .0
 
 #run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(5.569798, 8.028788, 3.048987), print_perf=T)
 
-faz2f = fit_model("fazly2", orders[condnames], c(1e-10,5,.1), c(.5,20000,1))
-faz2a = fit_model("fazly2", conds[conds_with_data], c(1e-10,5,.1), c(.5,20000,1))
+faz2f = fit_model("fazly2", orders[condnames], c(1e-12,5,1e-12), c(.5,60000,1))
+faz2a = fit_model("fazly2", conds[conds_with_data], c(1e-12,5,1e-12), c(.5,60000,1))
 
+faz2 = run_model(orders[["freq369-3x3hiCD"]], "fazly2", c(1e-10, 20000,.7))
 
 multinomial_likelihood_perfect <- function(par, ord) {
 	M = model(par, ord=ord)

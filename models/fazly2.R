@@ -3,8 +3,8 @@
 model <- function(params, ord=c(), reps=1) {
 	lambda <- params[1] # small smoothing factor (1e-5)
 	beta <- params[2] # upper bound on number of symbol types to expect? (8500)
-	theta <- params[3] # threshold for knowledge (.7)
-	
+	theta <- params[3] # threshold
+  
 	traj = list()
 	voc_sz = max(unlist(ord$words), na.rm=TRUE) # vocabulary size
 	ref_sz = max(unlist(ord$objs), na.rm=TRUE) # number of objects
@@ -50,9 +50,12 @@ model <- function(params, ord=c(), reps=1) {
 		index = (rep-1)*length(ord$trials) + t # index for learning trajectory
 		traj[[index]] = m
 	  }
-	  comp = diag(m) / rowSums(m)[1:voc_sz]
+	  comp = diag(m)[1:voc_sz] / rowSums(m)[1:voc_sz]
 	}
-	perf = diag(m) / rowSums(m)[1:voc_sz] # not using theta threshold, but it only converts to binary know/not (can't help)
-	want = list(perf=perf, matrix=m[1:voc_sz,], traj=traj)
+	#perf = diag(m)[1:voc_sz] / rowSums(m)[1:voc_sz] # not using theta threshold, but it only converts to binary know/not (can't help)
+	mt = m
+  mt[which(mt<theta)] = 0
+  perf = diag(mt)[1:voc_sz] / (rowSums(mt)[1:voc_sz]+1e-12)
+  want = list(perf=perf, matrix=m[1:voc_sz,], traj=traj)
 	return(want)
 } 
