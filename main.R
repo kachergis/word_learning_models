@@ -19,7 +19,7 @@ run_model <- function(cond, model_name, parameters, print_perf=F) {
 	require(pso) # or require(DEoptim)
 	source(paste(model_dir,model_name,".R",sep=''))
 	mod = model(parameters, ord=cond$train)
-	if(print_perf) print(mean(mod$perf))
+	if(print_perf) print(mod$perf)
 	return(mod)
 }
 
@@ -113,10 +113,17 @@ rww = fit_model("rescorla-wagner_words_cues", orders[condnames], c(.0001,.01, .0
 
 #run_model(orders[["freq369-3x3hiCD"]], "Bayesian_decay", c(5.569798, 8.028788, 3.048987), print_perf=T)
 
-faz2f = fit_model("fazly2", orders[condnames], c(1e-12,5,1e-12), c(.5,60000,1))
-faz2a = fit_model("fazly2", conds[conds_with_data], c(1e-12,5,1e-12), c(.5,60000,1))
+faz_parms = c(.0001, 1000, .7)
+f = run_model(orders[["freq369-3x3hiCD"]], "fazly", faz_parms, print_perf=T)
+# according to Fazly et al. should be: .84 .94 .88 .75 .80 .89 .92 .95 .93 .98 .89 .92 .92 .98 .88 .88 .98 .85
+faz_perf = c(.84, .94, .88, .75, .80, .89, .92, .95, .93, .98,.89,.92,.92,.98,.88,.88,.98,.85)
+# freq3: .85 freq6: .93  freq9: .92
 
-faz2 = run_model(orders[["freq369-3x3hiCD"]], "fazly2", c(1e-10, 20000,.7))
+f3 = run_model(orders[["freq369-3x3hiCD"]], "fazly3", faz_parms, print_perf=T)
+cor(faz_perf, f3$perf) # .97! really close...
+
+faz3f = fit_model("fazly3", orders[condnames], c(1e-12,5,1e-12), c(.5,60000,1))
+faz3a = fit_model("fazly3", conds[conds_with_data], c(1e-12,5,1e-12), c(.5,60000,1))
 
 multinomial_likelihood_perfect <- function(par, ord) {
 	M = model(par, ord=ord)
