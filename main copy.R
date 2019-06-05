@@ -13,7 +13,9 @@ load(paste(order_dir,"asymmetric_conditions.RData",sep='')) # conds
 print(names(orders))
 print(names(conds))
 
+
 load(paste(data_dir,"asym_master.RData",sep='')) # raw
+
 
 run_model <- function(cond, model_name, parameters, print_perf=F) {
 	require(pso) # or require(DEoptim)

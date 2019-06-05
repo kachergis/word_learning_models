@@ -27,13 +27,13 @@ mean(diag(M) / rowSums(M))
 
 # all for ord1 (high CD)
 # with learning rate limited to 1, ~.88 perf is achieved with lambda=.97 and alpha=.82
-# chi	lambda	alpha	perf
-# .5	.68		.87		.79		(worst perf with high lambda (~12.5))
-# 1		.97		.82		.87
-# 2		1.15	.79		.92
-# 5		1.51	.73		.95
-# 10	1.78	.70		.98
-# 20	2.8		.65		.985
+# chi  lambda	alpha	perf
+# .5		.68      .87		.79		(worst perf with high lambda (~12.5))
+# 1		.97      .82		.87
+# 2	   1.15      .79		.92
+# 5	   1.51      .73		.95
+# 10	   1.78      .70		.98
+# 20	   2.8		.65		.985
 # 40	2.12	.63		.991
 
 # medium CD
