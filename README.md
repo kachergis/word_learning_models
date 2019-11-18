@@ -62,24 +62,15 @@ models/
 
 ## Models
 
-	- fazly.R - incremental probabilistic model from Fazly, A., Alishahi, A., and Stevenson, S. (2010). A probabilistic computational model of cross-situational word learning, Cognitive Science, 34(6): 1017-1063.
-	
-	- kachergis.R - Strength- and Uncertainty-biased Model from Kachergis, G., Yu, C., & Shiffrin, R.M. (2012). An Associative Model of Adaptive Inference for Learning Word-Referent Mappings. Psychonomic Bulletin & Review, 19(2), 317-324.
-
-	- novelty.R - like the kachergis.R model, but uses novelty (inverse stimulus frequency) in lieu of associate entropy
-
-	- uncertainty.R - like the kachergis.R model, but without the strength/familiarity bias
-
-	- strength.R - like the kachergis.R model, but without the entropy/uncertainty bias
-
-	- Bayesian_decay.R - a Bayesian model that strengthens all plausible (i.e., co-occurring) pairings and weakens all implausible associations based on strengthening and decay parameters
-
-	- MINERVA2.R - adaptation of the MINERVA 2 episodic memory model from Hintzman, D.L. (1984). MINERVA 2: A simulation model of human memory. Behavior Research Methods, 16(2), 96-101.
-
-	- tilles.R - (possibly flawed) implementation of model from Tilles, P.F.C. & Fontanari, J.F. (2013). Reinforcement and inference in cross-situational word learning. Frontiers in Behavioral Neuroscience. doi: 10.3389/fnbeh.2013.00163
-
-	- TODAM2.R - a few different adaptations of the TODAM 2 model from Murdock, B.B. (1997). Context and mediators in a theory of distributed associative memory (TODAM2). Psychological Review, 104, 839-862.
-
-	- rescorla-wagner.R - Rescorla, R.A. & Wagner, A.R. (1972) A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement, Classical Conditioning II, A.H. Black & W.F. Prokasy, Eds., pp. 64–99. Appleton-Century-Crofts.
+* fazly.R - incremental probabilistic model from Fazly, A., Alishahi, A., and Stevenson, S. (2010). A probabilistic computational model of cross-situational word learning, Cognitive Science, 34(6): 1017-1063.
+* kachergis.R - Strength- and Uncertainty-biased Model from Kachergis, G., Yu, C., & Shiffrin, R.M. (2012). An Associative Model of Adaptive Inference for Learning Word-Referent Mappings. Psychonomic Bulletin & Review, 19(2), 317-324.
+* novelty.R - like the kachergis.R model, but uses novelty (inverse stimulus frequency) in lieu of associate entropy
+* uncertainty.R - like the kachergis.R model, but without the strength/familiarity bias
+* strength.R - like the kachergis.R model, but without the entropy/uncertainty bias
+* Bayesian_decay.R - a Bayesian model that strengthens all plausible (i.e., co-occurring) pairings and weakens all implausible associations based on strengthening and decay parameters
+* MINERVA2.R - adaptation of the MINERVA 2 episodic memory model from Hintzman, D.L. (1984). MINERVA 2: A simulation model of human memory. Behavior Research Methods, 16(2), 96-101.
+* tilles.R - (possibly flawed) implementation of model from Tilles, P.F.C. & Fontanari, J.F. (2013). Reinforcement and inference in cross-situational word learning. Frontiers in Behavioral Neuroscience. doi: 10.3389/fnbeh.2013.00163
+* TODAM2.R - a few different adaptations of the TODAM 2 model from Murdock, B.B. (1997). Context and mediators in a theory of distributed associative memory (TODAM2). Psychological Review, 104, 839-862.
+* rescorla-wagner.R - Rescorla, R.A. & Wagner, A.R. (1972) A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement, Classical Conditioning II, A.H. Black & W.F. Prokasy, Eds., pp. 64–99. Appleton-Century-Crofts.
 
 
