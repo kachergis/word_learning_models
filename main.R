@@ -32,12 +32,15 @@ animate_trajectories <- function(models, conds, condnames, params) {
 	}
 }
 
+
 models = c("kachergis", "strength", "uncertainty", "novelty", "Bayesian_decay", "rescorla_wagner")
 condnames = c("orig_3x3","freq369-3x3hiCD","freq369-3x3loCD")
 
 
 models = c("kachergis","fazly","rescorla-wagner")
-params = list("kachergis"=c(0.02470323,0.4890386,0.977897), "fazly"=c(0.01557498,20000,0.1003937), "rescorla-wagner"=c(0.08853654,0.9636937,6.48722)) # best from cond 207 (arbitrarily) 4x4 + 2 w/o
+params = list("kachergis"=c(0.02470323,0.4890386,0.977897), 
+              "fazly"=c(0.01557498,20000,0.1003937), 
+              "rescorla-wagner"=c(0.08853654,0.9636937,6.48722)) # best from cond 207 (arbitrarily) 4x4 + 2 w/o
 animate_trajectories(models, orders, condnames, params)
 
 

@@ -36,3 +36,5 @@ animate_trajectory <- function(mod, modname='', condname='') {
 		}
 	}, movie.name=paste(modname,"_model",condname,"_cond_trajectory.gif",sep=''))
 }
+
+
